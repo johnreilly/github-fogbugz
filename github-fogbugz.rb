@@ -61,7 +61,7 @@ class GithubFogbugz
     branch = payload["ref"].split('/').last
     
     payload["commits"].each do |c|
-      process_commit(c.first, c.last, repo, branch, before, config['fb_submit_url'], config['curl'])
+      process_commit(c.first, c.last, repo, branch, payload['before'], config['fb_submit_url'], config['curl'])
     end
     
   end

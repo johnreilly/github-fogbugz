@@ -55,3 +55,11 @@ It's fairly obvious that FogBugz was written for a more traditional CVS/SVN SCM 
 
 This is in FogBugz 6.1.23.  I've got a [thread started](http://support.fogcreek.com/default.asp?fogbugz.4.24526.0) on their forum asking for this to be cleaned up a bit. We'll see if it gets better in future releases.
 
+Thanks
+---
+Inspired by [github-campfire](http://github.com/jnewland/github-campfire) by [jnewland](http://github.com/jnewland) and
+[github-twitter](http://github.com/jnunemaker/github-twitter) by [jnunemaker](http://github.com/jnunemaker). 
+
+License
+---
+MIT.  See LICENSE file.

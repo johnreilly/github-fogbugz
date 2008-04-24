@@ -1,0 +1,12 @@
+fb_submit_url: "http://fogbugz.server.com/cvsSubmit.php"
+curl: "/usr/bin/curl"
+repos:
+  cvs:
+    log_url: "http://cvs.server.com/viewcvs.cgi/^FILE?rev=1.1&view=log"
+    diff_url: "http://cvs.trms.com/viewcvs.cgi/^FILE?r1=^R1&r2=^R2"
+  github-fogbugz:
+    log_url: "https://github.com/johnreilly/github-fogbugz/commits/^FILE"
+    diff_url: "https://github.com/johnreilly/github-fogbugz/commit/^R2"
+  github-myotherproject:
+    log_url: "https://github.com/username/github-myotherproject/commits/^FILE"
+    diff_url: "https://github.com/username/github-myotherproject/commit/^R2"

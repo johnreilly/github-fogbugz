@@ -23,6 +23,7 @@ spec = Gem::Specification.new do |s|
   
   # Uncomment this to add a dependency
   s.add_dependency "activesupport", "~> 2.0"
+  s.add_dependency "json", "~> 1.1.2"
   
   s.require_path = "lib"
   s.autorequire = GEM

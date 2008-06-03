@@ -44,3 +44,32 @@ Rake::TestTask.new do |t|
 end
 
 task :default => :test
+
+file "lib/message_parser.rb" => "lib/message_parser_machine.rb" do
+  sh "ragel -R lib/message_parser_machine.rb -o lib/message_parser.rb"
+end
+
+file "tmp/machine.dot" => "lib/message_parser_machine.rb" do
+  sh "ragel -V lib/message_parser_machine.rb -o tmp/machine.dot"
+end
+
+file "tmp/machine.png" => "tmp/machine.dot" do
+  sh "dot -Tpng tmp/machine.dot > tmp/machine.png"
+end
+
+namespace :ragel do
+  desc "Compile the Ragel state machine to executable Ruby code"
+  task :compile => "lib/message_parser.rb"
+
+  desc "Generate tmp/machine.png"
+  task :graph => "tmp/machine.png"
+
+  desc "Delete generated Ragel files"
+  task :clean do
+    rm_f "lib/message_parser.rb"
+    rm_f "tmp/machine.dot"
+    rm_f "tmp/machine.png"
+  end
+end
+
+task :ragel => %w(ragel:compile ragel:graph)

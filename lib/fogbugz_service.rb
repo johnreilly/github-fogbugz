@@ -1,7 +1,7 @@
 require "uri"
 require "rexml/document"
 require "rexml/xpath"
-require "activesupport"
+require "cgi"
 
 class FogbugzService
   class FogbugzError < RuntimeError; end
@@ -37,7 +37,7 @@ class FogbugzService
     params = {"cmd" => "logon", "email" => email, "password" => password}
     document = get(@api_uri, params)
     bad_logon = REXML::XPath.first(document.root, "//error")
-    raise BadCredentials, "Bad credentials supplied to Fogbugz: #{bad_logon}" unless bad_logon.blank?
+    raise BadCredentials, "Bad credentials supplied to Fogbugz: #{bad_logon}" if bad_logon
     REXML::XPath.first(document.root, "//token/text()").to_s
   end
 
@@ -65,7 +65,8 @@ class FogbugzService
   # Returns an REXML::Document to the specified URI
   def get(uri, params=nil)
     cmd = if params then
-      "#{@curl} --data '#{params.to_query}' --silent '#{uri.to_s}'"
+      query = params.map {|k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join("&")
+      "#{@curl} --data '#{query}' --silent '#{uri.to_s}'"
     else
       "#{@curl} --silent '#{uri.to_s}'"
     end

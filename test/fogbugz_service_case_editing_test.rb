@@ -12,37 +12,37 @@ class FogbugzServiceCaseEditingTest < Test::Unit::TestCase
   end
 
   def test_implement_calls_fogbugz_with_cmd_set_to_resolve_and_status_set_to_implement
-    @uri.query = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:implemented],
-        "sEvent" => "this is the message", "token" => TOKEN}.to_query
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
+    params = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:implemented],
+        "sEvent" => "this is the message", "token" => TOKEN}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
     @service.implement(:case => "2211", :message => "this is the message")
   end
 
   def test_fix_calls_fogbugz_with_cmd_set_to_resolve_and_status_set_to_fixed
-    @uri.query = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:fixed],
-        "sEvent" => "this is the message", "token" => TOKEN}.to_query
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
+    params = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:fixed],
+        "sEvent" => "this is the message", "token" => TOKEN}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
     @service.fix(:case => "2211", :message => "this is the message")
   end
 
   def test_complete_calls_fogbugz_with_cmd_set_to_resolve_and_status_set_to_completed
-    @uri.query = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:completed],
-        "sEvent" => "this is the message", "token" => TOKEN}.to_query
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
+    params = {"cmd" => "resolve", "ixBug" => "2211", "ixStatus" => FogbugzService::STATES[:completed],
+        "sEvent" => "this is the message", "token" => TOKEN}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
     @service.complete(:case => "2211", :message => "this is the message")
   end
 
   def test_close_calls_fogbugz_with_cmd_set_to_close
-    @uri.query = {"cmd" => "close", "ixBug" => "2211",
-        "sEvent" => "this is the message", "token" => TOKEN}.to_query
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
+    params = {"cmd" => "close", "ixBug" => "2211",
+        "sEvent" => "this is the message", "token" => TOKEN}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
     @service.close(:case => "2211", :message => "this is the message")
   end
 
   def test_append_message_calls_fogbugz_with_cmd_set_to_edit
-    @uri.query = {"cmd" => "edit", "ixBug" => "2211",
-        "sEvent" => "this is the message", "token" => TOKEN}.to_query
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
+    params = {"cmd" => "edit", "ixBug" => "2211",
+        "sEvent" => "this is the message", "token" => TOKEN}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_EDIT_RESPONSE))
     @service.append_message(:case => "2211", :message => "this is the message")
   end
 

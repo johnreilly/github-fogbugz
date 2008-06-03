@@ -180,7 +180,7 @@ class GithubFogbugz
     author = commit["author"]["email"]
 
     token = tokens[author]
-    submit_to_fogbugz(sha1, commit, token, curl_path) unless token.blank?
+    submit_to_fogbugz(sha1, commit, token, curl_path) if token
 
     files = commit["removed"] | commit["added"] | commit["modified"]
     

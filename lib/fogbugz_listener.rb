@@ -2,7 +2,7 @@ class FogbugzListener
   attr_reader :options
 
   def initialize(options={})
-    @options = options.symbolize_keys
+    @options = options
     @state = :invalid
     @actions = Hash.new {|h, k| h[k] = Array.new}
   end

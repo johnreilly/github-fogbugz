@@ -10,9 +10,8 @@ class FogbugzServiceLogonTest < Test::Unit::TestCase
   end
 
   def test_logon_calls_fogbugz_to_retrieve_token
-    params = {"cmd" => "logon", "email" => "me@my-domain.com", "password" => "my-super-duper-password"}.to_query
-    @uri.query = params
-    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_LOGON_RESPONSE))
+    params = {"cmd" => "logon", "email" => "me@my-domain.com", "password" => "my-super-duper-password"}
+    @service.expects(:get).with(@uri, params).returns(REXML::Document.new(VALID_LOGON_RESPONSE))
     @service.logon("me@my-domain.com", "my-super-duper-password")
   end
 

@@ -140,7 +140,11 @@ class GithubFogbugz
   end
 
   def config
-    @config ||= File.file?("config.yml") ? YAML.load_file("config.yml") : raise "#{Dir.pwd}/config.yml does not exist!  Aborting..."
+    @config ||= if File.file?("config.yml") then
+      YAML.load_file("config.yml")
+    else
+      raise "#{Dir.pwd}/config.yml does not exist!  Aborting..."
+    end
   end
 
   def submit_to_fogbugz(sha1, commit, token, curl_path)

@@ -37,6 +37,17 @@ class FogbugzServiceTest < Test::Unit::TestCase
     @service.validate!
   end
 
+  def test_connect_calls_validate_and_yields
+    @service.expects(:validate!)
+    yielded = false
+    @service.connect do |service|
+      assert_equal service, @service
+      yielded = true
+    end
+
+    assert yielded
+  end
+
   VALID_API_RESPONSE = <<-API
     <?xml version="1.0" encoding="UTF-8" ?>
     <response>

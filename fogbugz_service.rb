@@ -24,7 +24,13 @@ class FogbugzService
     @api_uri = @root_uri.merge(relative_path.to_s)
   end
 
-  
+  def connect
+    validate!
+    yield self
+  end
+
+  def logon(email, password)
+  end
 
   protected
   # Returns an REXML::Document to the specified URI

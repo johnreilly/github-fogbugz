@@ -42,4 +42,10 @@ class MessageParserTest < Test::Unit::TestCase
     @listener.expects(:case).with("1334").once
     MessageParser.parse("Implements #1334", @listener)
   end
+
+  def test_parse_completes
+    @listener.expects(:complete)
+    @listener.expects(:case).with("1334").once
+    MessageParser.parse("Completes #1334", @listener)
+  end
 end

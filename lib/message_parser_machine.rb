@@ -5,13 +5,15 @@ class MessageParser
     bugid = ('#' [1-9] [0-9]*);
 
     closes = (/close/i ([sS])?);
+    completes = (/complete/i ([sS])?);
     references = (/reference/i ([sS])?);
     fixes = ((/re/i)? /fix/i (/ed/i | (/es/i))?);
     reopens = (/reopen/i ([sS])?);
     implements = ((/re/i)? /implement/i ([sS])?);
-    keywords = (closes | references | fixes | reopens | implements);
+    keywords = (closes | completes | references | fixes | reopens | implements);
     main := |*
               (closes) => { listener.close };
+              (completes) => { listener.complete };
               (references) => { listener.reference };
               (fixes) => { listener.fix };
               (reopens) => { listener.reopen };

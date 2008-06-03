@@ -46,7 +46,6 @@ get "/login" do
   AUTH_FORM.call(config, Hash.new)
 end
 
-
 post "/authenticate" do
   tokens = File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
   config = YAML.load_file("config.yml")
@@ -70,7 +69,19 @@ post "/authenticate" do
 end
 
 get "/authenticated" do
-  "<p>You are now authenticated to FogBugz.  Go forth and commit!</p>"
+  <<-HTML
+    <h1>Authenticated</h1>
+    <p>You are now authenticated to FogBugz.  Go forth and commit!</p>
+    
+    <h2>Writing commit messages</h2>
+    <p>Your commit messages can now contain text like the following to automatically manage your cases:</p>
+    <blockquote>
+      <p>Implemented foo, corrected baz.</p>
+      <p>Implements #1234, references #2345.  Closes #1234.</p>
+    </blockquote>
+    <p>This would automatically add the commit message to cases #1234 <em>and</em> #2345.  The commit message will be appended as an event to the case.  In addition, case #1234 will be closed.</p>
+    <p>GithubFogbugz recognizes the following keywords:  closes, implements, references and fixes.  NOTE:  FogBugz does not allow closing a case that isn't resolved, so you really must use "Implements X, closes X", or else it won't work.</p>
+  HTML
 end
 
 ## 

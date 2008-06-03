@@ -11,9 +11,10 @@ class FogbugzService
 
   attr_reader :root_uri, :api_uri
 
-  def initialize(root, curl)
+  def initialize(root, curl, token=nil)
     @root_uri = root.respond_to?(:scheme) ? root : URI.parse(root)
     @curl = curl
+    @token = token
   end
 
   def validate!
@@ -42,6 +43,41 @@ class FogbugzService
     REXML::XPath.first(document.root, "//token/text()").to_s
   end
 
+  def implement(data)
+    uri = @api_uri.dup
+    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
+      "ixStatus" => STATES[:implemented], "token" => @token}.to_query
+    get(uri)
+  end
+
+  def fix(data)
+    uri = @api_uri.dup
+    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
+      "ixStatus" => STATES[:fixed], "token" => @token}.to_query
+    get(uri)
+  end
+
+  def complete(data)
+    uri = @api_uri.dup
+    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
+      "ixStatus" => STATES[:completed], "token" => @token}.to_query
+    get(uri)
+  end
+
+  def close(data)
+    uri = @api_uri.dup
+    uri.query = {"cmd" => "close", "ixBug" => data[:case], "sEvent" => data[:message],
+      "token" => @token}.to_query
+    get(uri)
+  end
+
+  def append_message(data)
+    uri = @api_uri.dup
+    uri.query = {"cmd" => "edit", "ixBug" => data[:case], "sEvent" => data[:message],
+      "token" => @token}.to_query
+    get(uri)
+  end
+
   protected
   # Returns an REXML::Document to the specified URI
   def get(uri)
@@ -54,4 +90,6 @@ class FogbugzService
       raise BadXml, "Could not parse response data:\n#{data}"
     end
   end
+
+  STATES = {:fixed => 2, :completed => 15, :implemented => 8}
 end

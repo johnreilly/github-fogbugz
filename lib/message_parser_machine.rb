@@ -8,18 +8,15 @@ class MessageParser
     references = (/reference/i ([sS])?);
     fixes = ((/re/i)? /fix/i (/ed/i | (/es/i))?);
     reopens = (/reopen/i ([sS])?);
-    reactivates = (/reactivate/i ([sS])?);
     implements = ((/re/i)? /implement/i ([sS])?);
-    keywords = (closes | references | fixes | reopens | reactivates | implements);
+    keywords = (closes | references | fixes | reopens | implements);
     main := |*
               (closes) => { listener.close };
               (references) => { listener.reference };
               (fixes) => { listener.fix };
               (reopens) => { listener.reopen };
-              (reactivates) => { listener.reactivate };
               (implements) => { listener.implement };
-              (bugid) => { listener.case(data[ts...te].pack("C*")) };
-              ('.') => { listener.reference };
+              (bugid) => { listener.case(data[ts+1...te].pack("C*")) };
               (any - (bugid | keywords));
             *|;
   }%%

@@ -35,9 +35,7 @@ class FogbugzService
 
   def logon(email, password)
     params = {"cmd" => "logon", "email" => email, "password" => password}
-    uri = @api_uri.dup
-    uri.query = params.to_query
-    document = get(uri)
+    document = get(@api_uri, params)
     bad_logon = REXML::XPath.first(document.root, "//error")
     raise BadCredentials, "Bad credentials supplied to Fogbugz: #{bad_logon}" unless bad_logon.blank?
     REXML::XPath.first(document.root, "//token/text()").to_s
@@ -65,8 +63,13 @@ class FogbugzService
 
   protected
   # Returns an REXML::Document to the specified URI
-  def get(uri)
-    cmd = "#{@curl} --silent '#{uri.to_s}'"
+  def get(uri, params=nil)
+    cmd = if params then
+      "#{@curl} --data '#{params.to_query}' --silent '#{uri.to_s}'"
+    else
+      "#{@curl} --silent '#{uri.to_s}'"
+    end
+
     puts cmd
     data = `#{cmd}`
     begin
@@ -77,12 +80,10 @@ class FogbugzService
   end
 
   def tell_fogbugz(operation, data, status=nil)
-    uri = @api_uri.dup
     params = {"cmd" => operation.to_s, "ixBug" => data[:case], "sEvent" => data[:message],
       "token" => @token}
     params["ixStatus"] = status if status
-    uri.query = params.to_query
-    get(uri)
+    get(@api_uri, params)
   end
 
   STATES = {:fixed => 2, :completed => 15, :implemented => 8}

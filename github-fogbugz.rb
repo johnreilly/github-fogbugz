@@ -3,6 +3,7 @@ require 'json'
 require 'sinatra'
 require 'yaml'
 require 'cgi'
+require 'fogbugz_service'
 
 # This sinatra app has a couple of endpoints:
 #  /              This is where GitHub will send 
@@ -26,32 +27,46 @@ post '/' do
   GithubFogbugz.new(params[:payload])
 end
 
-get "/login" do
+AUTH_FORM = lambda {|config, params|
   <<-EOHTML
-    <form method="post" action="/authenticate">
-      <p><label for="email">Email:</label><br/>
-      <input name="email" size="40"/></p>
-      <p><label for="password">Password:</label><br/>
-      <input type="password" name="password" size="20"/></p>
-      <p><input type="submit" value="Authenticate to FogBugz"/></p>
-    </form>
-  EOHTML
+<h1>FogBugz Authentication</h1>
+<p>This form will authenticate you to <strong>#{config['fb_main_url']}</strong></p>
+<form method="post" action="/authenticate">
+  <p><label for="email">Email:</label><br/>
+  <input name="email" size="40" value="#{params['email']}"/></p>
+  <p><label for="password">Password:</label><br/>
+  <input type="password" name="password" size="20"/></p>
+  <p><input type="submit" value="Authenticate to FogBugz"/></p>
+</form>
+EOHTML
+}
+
+get "/login" do
+  config = YAML.load_file("config.yml")
+  AUTH_FORM.call(config, Hash.new)
 end
+
 
 post "/authenticate" do
   tokens = File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
   config = YAML.load_file("config.yml")
 
-  service = FogbugzService.new(config["fb_main_url"])
-  token = service.logon(params["email"], params["password"])
-  tokens[params["email"]] = token
+  begin
+    service = FogbugzService.new(config["fb_main_url"], config["curl"])
+    service.connect do
+      token = service.logon(params["email"], params["password"])
+      tokens[params["email"]] = token
+    end
 
-  File.open("tokens.yml", "wb") do |io|
-    io.write tokens.to_yaml
-    File.chmod(0600, "tokens.yml") # Ensure the tokens file is readable only by ourselves
+    File.open("tokens.yml", "wb") do |io|
+      io.write tokens.to_yaml
+      File.chmod(0600, "tokens.yml") # Ensure the tokens file is readable only by ourselves
+    end
+
+    redirect "/authenticated"
+  rescue FogbugzService::BadCredentials
+    "<p>Failed authentication: <strong>#{$!.message}</strong></p>" + AUTH_FORM.call(config, params)
   end
-
-  redirect "/authenticated"
 end
 
 get "/authenticated" do

@@ -129,6 +129,7 @@ class GithubFogbugz
     config = YAML.load_file('config.yml')
     
     payload = JSON.parse(payload)
+    payload = JSON.parse(payload["payload"])
     return unless payload.keys.include?("repository")
     
     repo = payload["repository"]["name"]

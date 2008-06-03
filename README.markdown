@@ -11,7 +11,7 @@ To Install and Run:
 ---
 
     $ sudo gem install sinatra json
-    $ mv config.yml.example config.yml
+    $ cp config/config.yml.example config/config.yml
     $ ...edit config.yml (see below)...
     $ ruby github-fogbugz.rb [-p <port>]
     

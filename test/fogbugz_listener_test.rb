@@ -33,7 +33,7 @@ class FogbugzListenerTest < Test::Unit::TestCase
   end
 
   def test_adds_link_to_github_in_message_if_repo_in_options
-    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "Reopens #3211", :repo => "http://github.com/johnreilly/github-fogbuz")
+    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "Reopens #3211", :commit_url => "http://github.com/johnreilly/github-fogbuz")
     @listener.reopen
     @listener.case("3211")
     @service.expects(:reopen).with(:case => "3211", :message => "Reopens #3211\n\nCommit: c829a13\nhttp://github.com/johnreilly/github-fogbuz/commit/c829a13")
@@ -41,7 +41,7 @@ class FogbugzListenerTest < Test::Unit::TestCase
   end
 
   def test_reference_adds_extra_text_to_link_cases_together
-    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "Implements #1112, references #9219, #9220", :repo => "http://github.com/johnreilly/github-fogbuz")
+    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "Implements #1112, references #9219, #9220", :commit_url => "http://github.com/johnreilly/github-fogbuz")
     @listener.implement
     @listener.case("1112")
     @listener.reference
@@ -53,7 +53,7 @@ class FogbugzListenerTest < Test::Unit::TestCase
   end
 
   def test_reference_only_adds_message_to_proper_case
-    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "References #3211", :repo => "http://github.com/johnreilly/github-fogbuz")
+    @listener = FogbugzListener.new(:sha1 => "c829a13", :message => "References #3211", :commit_url => "http://github.com/johnreilly/github-fogbuz/commit/c829a13")
     @listener.reference
     @listener.case("3211")
     @service.expects(:append_message).with(:case => "3211", :message => "References #3211\n\nCommit: c829a13\nhttp://github.com/johnreilly/github-fogbuz/commit/c829a13")

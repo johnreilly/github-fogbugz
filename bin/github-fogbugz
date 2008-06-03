@@ -27,6 +27,7 @@ require 'fogbugz_service'
 ##
 # GitHub should send its post-receive hook here.
 post '/' do
+  puts params.to_json
   GithubFogbugz.new(params[:payload])
 end
 
@@ -113,7 +114,11 @@ get '/repo_url' do
     
 end
 
-
+error do
+  err = request.env['sinatra.error']
+  puts "Error handling request: #{err.name}"
+  puts err.backtrace.join("\n")
+end
 
 
 ##

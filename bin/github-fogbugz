@@ -132,7 +132,22 @@ class GithubFogbugz
     end
     
   end
-  
+
+  def tokens
+    @tokens ||= File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
+  end
+
+  def config
+    @config ||= File.file?("config.yml") ? YAML.load_file("config.yml") : raise "#{Dir.pwd}/config.yml does not exist!  Aborting..."
+  end
+
+  def submit_to_fogbugz(sha1, commit, token, curl_path)
+    listener = FogbugzListener.new(:commit_url => commit["url"], :message => commit["message"], :sha1 => sha1)
+    MessageParser.parse(message, listener)
+    FogbugzService.new(config["fb_main_url"], curl_path, token)
+    listener.update_fogbugz
+  end
+
   def process_commit(sha1, commit, repo, branch, before, fb_submit_url, curl_path)
     
     # from each commit in the payload, we need to extract:
@@ -143,6 +158,11 @@ class GithubFogbugz
     # - bugzid (found inside the commit message)
     
     message = commit["message"]
+    author = commit["author"]["email"]
+
+    token = tokens[author]
+    submit_to_fogbugz(sha1, commit, token, curl_path) unless token.blank?
+
     files = commit["removed"] | commit["added"] | commit["modified"]
     
     # look for a bug id in each line of the commit message

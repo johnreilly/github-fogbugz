@@ -7,6 +7,8 @@ require 'cgi'
 
 $: << File.dirname(__FILE__) + "/../lib"
 require 'fogbugz_service'
+require 'fogbugz_listener'
+require 'message_parser'
 
 # This sinatra app has a couple of endpoints:
 #  /              This is where GitHub will send 
@@ -129,7 +131,6 @@ class GithubFogbugz
     config = YAML.load_file('config.yml')
     
     payload = JSON.parse(payload)
-    payload = JSON.parse(payload["payload"])
     return unless payload.keys.include?("repository")
     
     repo = payload["repository"]["name"]
@@ -139,6 +140,10 @@ class GithubFogbugz
       process_commit(c.first, c.last, repo, branch, payload['before'], config['fb_submit_url'], config['curl'])
     end
     
+    rescue
+      puts "Oh noez, something went wrong: #{$!.message}"
+      puts $!.backtrace.join("\n")
+      raise
   end
 
   def tokens
@@ -155,9 +160,11 @@ class GithubFogbugz
 
   def submit_to_fogbugz(sha1, commit, token, curl_path)
     listener = FogbugzListener.new(:commit_url => commit["url"], :message => commit["message"], :sha1 => sha1)
-    MessageParser.parse(message, listener)
-    FogbugzService.new(config["fb_main_url"], curl_path, token)
-    listener.update_fogbugz
+    MessageParser.parse(commit["message"], listener)
+    service = FogbugzService.new(config["fb_main_url"], curl_path, token)
+    service.connect do
+      listener.update_fogbugz(service)
+    end
   end
 
   def process_commit(sha1, commit, repo, branch, before, fb_submit_url, curl_path)

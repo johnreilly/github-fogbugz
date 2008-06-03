@@ -44,38 +44,23 @@ class FogbugzService
   end
 
   def implement(data)
-    uri = @api_uri.dup
-    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
-      "ixStatus" => STATES[:implemented], "token" => @token}.to_query
-    get(uri)
+    tell_fogbugz(:resolve, data, STATES[:implemented])
   end
 
   def fix(data)
-    uri = @api_uri.dup
-    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
-      "ixStatus" => STATES[:fixed], "token" => @token}.to_query
-    get(uri)
+    tell_fogbugz(:resolve, data, STATES[:fixed])
   end
 
   def complete(data)
-    uri = @api_uri.dup
-    uri.query = {"cmd" => "resolve", "ixBug" => data[:case], "sEvent" => data[:message],
-      "ixStatus" => STATES[:completed], "token" => @token}.to_query
-    get(uri)
+    tell_fogbugz(:resolve, data, STATES[:completed])
   end
 
   def close(data)
-    uri = @api_uri.dup
-    uri.query = {"cmd" => "close", "ixBug" => data[:case], "sEvent" => data[:message],
-      "token" => @token}.to_query
-    get(uri)
+    tell_fogbugz(:close, data)
   end
 
   def append_message(data)
-    uri = @api_uri.dup
-    uri.query = {"cmd" => "edit", "ixBug" => data[:case], "sEvent" => data[:message],
-      "token" => @token}.to_query
-    get(uri)
+    tell_fogbugz(:edit, data)
   end
 
   protected
@@ -89,6 +74,15 @@ class FogbugzService
     rescue REXML::ParseException
       raise BadXml, "Could not parse response data:\n#{data}"
     end
+  end
+
+  def tell_fogbugz(operation, data, status=nil)
+    uri = @api_uri.dup
+    params = {"cmd" => operation.to_s, "ixBug" => data[:case], "sEvent" => data[:message],
+      "token" => @token}
+    params["ixStatus"] = status if status
+    uri.query = params.to_query
+    get(uri)
   end
 
   STATES = {:fixed => 2, :completed => 15, :implemented => 8}

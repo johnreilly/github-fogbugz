@@ -18,6 +18,11 @@ class FogbugzServiceTest < Test::Unit::TestCase
     assert_equal @service_uri.merge("api.asp?"), @service.api_uri
   end
 
+  def test_validate_returns_the_api_uri
+    @service.stubs(:get).returns(REXML::Document.new(VALID_API_RESPONSE))
+    assert_equal @service_uri.merge("api.asp?"), @service.validate!
+  end
+
   def test_validate_raises_if_minimum_version_is_not_one
     @service.stubs(:get).returns(REXML::Document.new(RECENT_API_RESPONSE))
     assert_raise(FogbugzService::ClientOutOfDate) do

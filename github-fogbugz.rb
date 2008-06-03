@@ -4,18 +4,58 @@ require 'sinatra'
 require 'yaml'
 require 'cgi'
 
-# This sinatra app has two endpoints:
+# This sinatra app has a couple of endpoints:
 #  /              This is where GitHub will send 
 #                 its post-receive hooks
 #
 #  /repo_url      This is where FogBugz will send 
 #                 you when you click on a commit link
-
+#
+# If you want this Sinatra app to read the commit messages
+# to resolve/close issues automatically, you need to have
+# each of your developers to visit this page:
+#
+# /login          This is a simple form to tell github-fogbugz
+#                 about all of your developers.  Each dev must
+#                 authenticate once with this app, then the token
+#                 is kept on the filesystem.
 
 ##
 # GitHub should send its post-receive hook here.
 post '/' do
   GithubFogbugz.new(params[:payload])
+end
+
+get "/login" do
+  <<-EOHTML
+    <form method="post" action="/authenticate">
+      <p><label for="email">Email:</label><br/>
+      <input name="email" size="40"/></p>
+      <p><label for="password">Password:</label><br/>
+      <input type="password" name="password" size="20"/></p>
+      <p><input type="submit" value="Authenticate to FogBugz"/></p>
+    </form>
+  EOHTML
+end
+
+post "/authenticate" do
+  tokens = File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
+  config = YAML.load_file("config.yml")
+
+  service = FogbugzService.new(config["fb_main_url"])
+  token = service.logon(params["email"], params["password"])
+  tokens[params["email"]] = token
+
+  File.open("tokens.yml", "wb") do |io|
+    io.write tokens.to_yaml
+    File.chmod(0600, "tokens.yml") # Ensure the tokens file is readable only by ourselves
+  end
+
+  redirect "/authenticated"
+end
+
+get "/authenticated" do
+  "<p>You are now authenticated to FogBugz.  Go forth and commit!</p>"
 end
 
 ## 

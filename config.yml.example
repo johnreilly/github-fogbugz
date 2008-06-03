@@ -1,4 +1,5 @@
-fb_submit_url: "http://fogbugz.server.com/cvsSubmit.php"
+fb_submit_url:  "http://fogbugz.server.com/cvsSubmit.php"
+fb_main_url:  "http://fogbugz.server.com/"
 curl: "/usr/bin/curl"
 repos:
   cvs:

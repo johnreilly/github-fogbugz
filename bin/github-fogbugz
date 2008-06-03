@@ -4,6 +4,8 @@ require 'json'
 require 'sinatra'
 require 'yaml'
 require 'cgi'
+
+$: << File.dirname(__FILE__) + "/../lib"
 require 'fogbugz_service'
 
 # This sinatra app has a couple of endpoints:

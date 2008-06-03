@@ -37,7 +37,7 @@ task :install => [:package] do
   sh %{sudo gem install pkg/#{GEM}-#{VERSION}}
 end
 
-Rake::TestTask.new do |t|
+Rake::TestTask.new("test" => "lib/message_parser.rb") do |t|
   t.libs << "test"
   t.test_files = FileList["test/*_test.rb"]
   t.verbose = true

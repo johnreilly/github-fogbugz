@@ -4,7 +4,7 @@ require "fogbugz_service"
 class FogbugzServiceTest < Test::Unit::TestCase
   def setup
     @service_uri = URI.parse("http://fogbugz.my-service.com/")
-    @service = FogbugzService.new(@service_uri)
+    @service = FogbugzService.new(@service_uri, "/path/to/curl")
   end
 
   def test_validate_connects_to_fogbugz_and_retrieves_the_api_url

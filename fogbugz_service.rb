@@ -1,5 +1,4 @@
 require "uri"
-require "open-uri"
 require "rexml/document"
 require "rexml/xpath"
 require "activesupport"
@@ -12,8 +11,9 @@ class FogbugzService
 
   attr_reader :root_uri, :api_uri
 
-  def initialize(root)
+  def initialize(root, curl)
     @root_uri = root.respond_to?(:scheme) ? root : URI.parse(root)
+    @curl = curl
   end
 
   def validate!
@@ -34,7 +34,9 @@ class FogbugzService
 
   def logon(email, password)
     params = {"cmd" => "logon", "email" => email, "password" => password}
-    document = get(@api_uri.merge("?#{params.to_query}"))
+    uri = @api_uri.dup
+    uri.query = params.to_query
+    document = get(uri)
     bad_logon = REXML::XPath.first(document.root, "//error")
     raise BadCredentials, "Bad credentials supplied to Fogbugz: #{bad_logon}" unless bad_logon.blank?
     REXML::XPath.first(document.root, "//token/text()").to_s
@@ -43,11 +45,13 @@ class FogbugzService
   protected
   # Returns an REXML::Document to the specified URI
   def get(uri)
-    data = open(uri)
+    cmd = "#{@curl} --silent '#{uri.to_s}'"
+    puts cmd
+    data = `#{cmd}`
     begin
-      REXML::Document.new(data.read)
+      REXML::Document.new(data)
     rescue REXML::ParseException
-      raise BadXml, "Could not parse response data:\n#{data.read}"
+      raise BadXml, "Could not parse response data:\n#{data}"
     end
   end
 end

@@ -4,14 +4,15 @@ require "fogbugz_service"
 class FogbugzServiceLogonTest < Test::Unit::TestCase
   def setup
     @service_uri = URI.parse("http://fogbugz.my-service.com/")
-    @service = FogbugzService.new(@service_uri)
+    @service = FogbugzService.new(@service_uri, "/path/to/curl")
     @service.stubs(:get).returns(REXML::Document.new(VALID_API_RESPONSE))
     @uri = @service.validate!
   end
 
   def test_logon_calls_fogbugz_to_retrieve_token
     params = {"cmd" => "logon", "email" => "me@my-domain.com", "password" => "my-super-duper-password"}.to_query
-    @service.expects(:get).with(@uri.merge("?#{params}")).returns(REXML::Document.new(VALID_LOGON_RESPONSE))
+    @uri.query = params
+    @service.expects(:get).with(@uri).returns(REXML::Document.new(VALID_LOGON_RESPONSE))
     @service.logon("me@my-domain.com", "my-super-duper-password")
   end
 

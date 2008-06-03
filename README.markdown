@@ -1,10 +1,11 @@
 GitHub + Fogbugz
 ===
 
-This is a simple sinatra application that has two responsibilities:
+This is a simple sinatra application that has three responsibilities:
 
 * Receive and parse the JSON commit info from GitHub's post-receive hooks and send it to FogBugz
-* Act as a "gateway" for viewing multiple SCM repositories in FogBugz.
+* Act as a "gateway" for viewing multiple SCM repositories in FogBugz
+* Edit case history per the commit message's instructions.
 
 To Install and Run:
 ---
@@ -24,12 +25,15 @@ Set up your repositories on GitHub to send a [post-receive hook](http://github.c
 The configuration file holds several variables that you'll need to edit.
 
 * **fb\_submit\_url**: The url to the cvsSubmit.[php|asp] file on your FogBugz server.
+* **fb\_main\_url**: The url to your FogBugz's installation.
 * **curl**: The path to the curl binary. Curl is used to submit the commit to FogBugz.
 * **repos**: A list of the SCM repositories that you're using.  Each repo has two urls:
   * *log_url*: The url to the commit log for a specific file 
   * *diff_url*: The url to the specific commit or revision.
 
 Each repo name must match the the values that are in the *sRepo* field in FogBug's *CVS* table.
+
+Each developer must login to FogBugz through this app.  Visit **/login** and follow the instructions.  The act of logging in will create a tokens.yml file in the app's directory, chmod'ed 0600.  github-fogbugz expects the developer's E-Mail addresses to match: github vs fogbugz.
 
 ### FogBugz:  
 You'll need to do some configuration in FogBugz as well.  As the FogBugz admin, edit your site settings, and in the source control urls for logs and diffs, enter:

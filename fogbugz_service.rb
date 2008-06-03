@@ -18,7 +18,7 @@ class FogbugzService
     raise BadXml, "Did not find the expected root response element.  Instead, I found:\n#{document.root}" unless document.root.name == "response"
 
     minversion = REXML::XPath.first(document.root, "//minversion/text()").to_s
-    raise ClientOutOfDate, "This client expected to find version 1 in the api.xml file, instead it found #{minversion.inspect}" if minversion.to_i != 1
+    raise ClientOutOfDate, "This client expected to find a minversion <= 3 in the api.xml file.  Instead it found #{minversion.inspect}" unless minversion.to_i <= 3
 
     relative_path = REXML::XPath.first(document.root, "//url/text()")
     @api_uri = @root_uri.merge(relative_path.to_s)

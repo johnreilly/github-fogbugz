@@ -1,6 +1,23 @@
+# GithubFogbugz configuration file
+# ================================
+#
+# Setup your github-fogbugz integration through this configuration file.
+#
+# The URL to the cvsSubmit.[php|asp] file on your server.  This is to add the list of changed files to the cases.
 fb_submit_url:  "http://fogbugz.server.com/cvsSubmit.php"
+
+# The URL to the root of your FogBugz installation.
 fb_main_url:  "http://fogbugz.server.com/"
+
+# The path to the Curl binary.  Curl is used because of issues with SSL in Ruby's libraries.
 curl: "/usr/bin/curl"
+
+# A list of repositories that are known to your FogBugz installation.
+# Each repository is identified by a name and has 2 values: log_url and diff_url.
+# The repository's name must match the value given in the sRepos field of your FogBugz installation.
+#
+# See the FogBugz section in README.markdown for the details of how to setup your urls.
+# The examples below will get you started.
 repos:
   cvs:
     log_url: "http://cvs.server.com/viewcvs.cgi/^FILE?rev=1.1&view=log"

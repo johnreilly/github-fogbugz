@@ -13,9 +13,12 @@ To Install and Run:
     $ sudo gem install sinatra json
     $ mv config.yml.example config.yml
     $ rake ragel:compile # you need Ragel locally to make this work
-                         # if you install as a gem, you don't have anything to do
+                         # if you install as a gem, you don't need to execute this step
+    $ github-fogbugz     # Copies the config file examples to ~/.github-fogbugz/config.yml
     $ ...edit config.yml (see below)...
-    $ ruby github-fogbugz.rb [-p <port>]
+    $ github-fogbugz-server [-p port] [-e production]
+
+	# Send your developers here so they can authenticate to FogBugz
     $ http://localhost:<port>/login
     
 Configuration
@@ -24,7 +27,7 @@ Configuration
 ### GitHub repositories:
 Set up your repositories on GitHub to send a [post-receive hook](http://github.com/guides/post-receive-hooks) to the root url of this sinatra app. Be sure to include the port, if other than 80.
 
-### github-fogbugz (this app):
+### github-fogbugz-server (this app):
 The configuration file holds several variables that you'll need to edit.
 
 * **fb\_submit\_url**: The url to the cvsSubmit.[php|asp] file on your FogBugz server.
@@ -36,7 +39,7 @@ The configuration file holds several variables that you'll need to edit.
 
 Each repo name must match the the values that are in the *sRepo* field in FogBug's *CVS* table.
 
-Each developer must login to FogBugz through this app.  Visit **/login** and follow the instructions.  The act of logging in will create a tokens.yml file in the app's directory, chmod'ed 0600.  github-fogbugz expects the developer's E-Mail addresses to match: github vs fogbugz.
+Each developer must login to FogBugz through this app.  Visit **/login** and follow the instructions.  The act of logging in will create a tokens.yml file in the app's config directory, chmod'ed 0600.  github-fogbugz-server expects the developer's E-Mail addresses to match: github vs fogbugz.
 
 ### FogBugz:  
 You'll need to do some configuration in FogBugz as well.  As the FogBugz admin, edit your site settings, and in the source control urls for logs and diffs, enter:

@@ -14,10 +14,10 @@ spec = Gem::Specification.new do |s|
   s.version = VERSION
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
-  s.extra_rdoc_files = ["README", "LICENSE", "TODO"]
+  s.extra_rdoc_files = ["README.markdown", "LICENSE", "TODO"]
   s.summary = SUMMARY
   s.description = s.summary
-  s.author = AUTHOR
+  s.authors = AUTHOR
   s.email = EMAIL
   s.homepage = HOMEPAGE
   
@@ -26,7 +26,9 @@ spec = Gem::Specification.new do |s|
   
   s.require_path = "lib"
   s.autorequire = GEM
-  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{lib,test}/**/*")
+
+  # Must reference lib/message_parser.rb explicitely, or it won't be automatically generated
+  s.files = %w(LICENSE README.markdown Rakefile TODO lib/message_parser.rb) + Dir.glob("{lib,test,config,samples,bin}/**/*")
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -73,3 +75,8 @@ namespace :ragel do
 end
 
 task :ragel => %w(ragel:compile ragel:graph)
+
+desc "Remove all generated files"
+task :clean => "ragel:clean" do
+  rm_rf "pkg"
+end

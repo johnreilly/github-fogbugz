@@ -12,8 +12,11 @@ To Install and Run:
 
     $ sudo gem install sinatra json
     $ mv config.yml.example config.yml
+    $ rake ragel:compile # you need Ragel locally to make this work
+                         # if you install as a gem, you don't have anything to do
     $ ...edit config.yml (see below)...
     $ ruby github-fogbugz.rb [-p <port>]
+    $ http://localhost:<port>/login
     
 Configuration
 ---

@@ -7,18 +7,39 @@ This is a simple sinatra application that has three responsibilities:
 * Act as a "gateway" for viewing multiple SCM repositories in FogBugz
 * Edit case history per the commit message's instructions.
 
+Prerequisites
+---
+Gems:
+
+* sinatra
+* json
+
+Optional:
+
+* [Ragel](http://research.cs.queensu.ca/~thurston/ragel/): for generating the FogBugz message parser. If you install github-fogbugz as a gem, you will *not* need to generate the message parser.
+* [GraphViz](http://www.graphviz.org): for generating a graph of the Ragel generated state machine): 
+
 To Install and Run:
 ---
 
+    # Install the prerequisite gems.
     $ sudo gem install sinatra json
-    $ rake ragel:compile # you need Ragel locally to make this work
-                         # if you install as a gem, you don't need to execute this step
-    $ github-fogbugz     # Copies the config file examples to ~/.github-fogbugz/config.yml
-    $ ...edit config.yml (see below)...
+    
+    # You need Ragel locally to make this next command work.
+    # If you installed github-fogbugz as a gem, you do NOT need to execute this step.
+    $ rake ragel:compile 
+    
+    # Copies the config file examples to ~/.github-fogbugz/config.yml
+    $ github-fogbugz
+    
+    ...edit config.yml (see "configuration" section below)...
+    
     $ github-fogbugz-server [-p port] [-e production]
 
-	# Send your developers here so they can authenticate to FogBugz
-    $ http://localhost:<port>/login
+    # Send your developers here so they can authenticate with FogBugz.
+    # Each developer must login here before their commit messages
+    # will be sent to FogBugz.
+    $ http://<github-fogbugz-address>:<port>/login
     
 Configuration
 ---
@@ -38,7 +59,8 @@ The configuration file holds several variables that you'll need to edit.
 
 Each repo name must match the the values that are in the *sRepo* field in FogBug's *CVS* table.
 
-Each developer must login to FogBugz through this app.  Visit **/login** and follow the instructions.  The act of logging in will create a tokens.yml file in the app's config directory, chmod'ed 0600.  github-fogbugz-server expects the developer's E-Mail addresses to match: github vs fogbugz.
+### Authenticating:
+Each developer must login to FogBugz through this app.  Visit **/login** and follow the instructions.  The act of logging in will create a tokens.yml file in the app's config directory, chmod'ed 0600.  **Note**: github-fogbugz-server expects the developer's E-Mail addresses to match in both GitHub and FogBugz.
 
 ### FogBugz:  
 You'll need to do some configuration in FogBugz as well.  As the FogBugz admin, edit your site settings, and in the source control urls for logs and diffs, enter:
@@ -66,6 +88,8 @@ This is in FogBugz 6.1.23.  I've got a [thread started](http://support.fogcreek.
 
 Thanks
 ---
+Major thanks to [François Beausoleil](http://github.com/francois) for turning this project into something much greater than I had dreamed of.
+
 Inspired by [github-campfire](http://github.com/jnewland/github-campfire) by [jnewland](http://github.com/jnewland) and
 [github-twitter](http://github.com/jnunemaker/github-twitter) by [jnunemaker](http://github.com/jnunemaker). 
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+require "fileutils"
+
+case ARGV.length
+when 0
+  config_path = File.expand_path("~/.github-fogbugz/")
+when 1
+  config_path = File.expand_path(ARGV.shift)
+else
+  puts "0 or 1 arguments expected, received #{ARGV.length}"
+  puts
+  puts "Usage:"
+  puts "  #{$0} </path/to/config/dir>"
+  puts "  defaults to ~/.github-fogbugz"
+  exit 1
+end
+
+puts "Writing configuration file to #{config_path}/config.yml"
+FileUtils.mkpath(config_path)
+FileUtils.cp(File.dirname(__FILE__) + "/../config/config.yml.example", config_path + "/config.yml")
+
+puts "You now have to edit the configuration file and set the right values."
+puts "Documentation is available in the config file itself, and on the web at:"
+puts "\thttp://github.com/johnreilly/github-fogbugz/wikis"

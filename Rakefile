@@ -20,7 +20,7 @@ spec = Gem::Specification.new do |s|
   s.authors = AUTHOR
   s.email = EMAIL
   s.homepage = HOMEPAGE
-  s.executables = "github-fogbugz-server"
+  s.executables = ["github-fogbugz-server", "github-fogbugz"]
   
   # Uncomment this to add a dependency
   s.add_dependency "json", "~> 1.1.2"

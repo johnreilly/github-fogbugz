@@ -3,7 +3,7 @@ require "rake/testtask"
 require "rake/gempackagetask"
 
 GEM = "github-fogbugz"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 AUTHOR = ["John Reilly", "François Beausoleil"]
 EMAIL = ""
 HOMEPAGE = "http://github.com/johnreilly/github-fogbugz"

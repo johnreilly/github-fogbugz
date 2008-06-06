@@ -3,9 +3,9 @@ require "rake/testtask"
 require "rake/gempackagetask"
 
 GEM = "github-fogbugz"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 AUTHOR = ["John Reilly", "François Beausoleil"]
-EMAIL = ""
+EMAIL = ["francois@teksol.info"]
 HOMEPAGE = "http://github.com/johnreilly/github-fogbugz"
 SUMMARY = "A gem that acts as the gateway between GitHub and Fogbugz."
 
@@ -14,19 +14,21 @@ spec = Gem::Specification.new do |s|
   s.version = VERSION
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
-  s.extra_rdoc_files = ["README", "LICENSE", "TODO"]
+  s.extra_rdoc_files = ["README.markdown", "LICENSE", "TODO"]
   s.summary = SUMMARY
   s.description = s.summary
-  s.author = AUTHOR
+  s.authors = AUTHOR
   s.email = EMAIL
   s.homepage = HOMEPAGE
+  s.executables = ["github-fogbugz-server", "github-fogbugz"]
   
   # Uncomment this to add a dependency
   s.add_dependency "json", "~> 1.1.2"
   
   s.require_path = "lib"
-  s.autorequire = GEM
-  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{lib,test}/**/*")
+
+  # Must reference lib/message_parser.rb explicitely, or it won't be automatically generated
+  s.files = %w(LICENSE README.markdown Rakefile TODO lib/message_parser.rb) + Dir.glob("{lib,test,config,samples,bin}/**/*")
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -73,3 +75,8 @@ namespace :ragel do
 end
 
 task :ragel => %w(ragel:compile ragel:graph)
+
+desc "Remove all generated files"
+task :clean => "ragel:clean" do
+  rm_rf "pkg"
+end

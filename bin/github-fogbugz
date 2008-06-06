@@ -1,212 +1,24 @@
 #!/usr/bin/env ruby
-require 'rubygems'
-require 'json'
-require 'sinatra'
-require 'yaml'
-require 'cgi'
+require "fileutils"
 
-$: << File.dirname(__FILE__) + "/../lib"
-require 'fogbugz_service'
-require 'fogbugz_listener'
-require 'message_parser'
-
-# This sinatra app has a couple of endpoints:
-#  /              This is where GitHub will send 
-#                 its post-receive hooks
-#
-#  /repo_url      This is where FogBugz will send 
-#                 you when you click on a commit link
-#
-# If you want this Sinatra app to read the commit messages
-# to resolve/close issues automatically, you need to have
-# each of your developers to visit this page:
-#
-# /login          This is a simple form to tell github-fogbugz
-#                 about all of your developers.  Each dev must
-#                 authenticate once with this app, then the token
-#                 is kept on the filesystem.
-
-##
-# GitHub should send its post-receive hook here.
-post '/' do
-  puts params.to_json
-  GithubFogbugz.new(params[:payload])
+case ARGV.length
+when 0
+  config_path = File.expand_path("~/.github-fogbugz/")
+when 1
+  config_path = File.expand_path(ARGV.shift)
+else
+  puts "0 or 1 arguments expected, received #{ARGV.length}"
+  puts
+  puts "Usage:"
+  puts "  #{$0} </path/to/config/dir>"
+  puts "  defaults to ~/.github-fogbugz"
+  exit 1
 end
 
-AUTH_FORM = lambda {|config, params|
-  <<-EOHTML
-<h1>FogBugz Authentication</h1>
-<p>This form will authenticate you to <strong>#{config['fb_main_url']}</strong></p>
-<form method="post" action="/authenticate">
-  <p><label for="email">Email:</label><br/>
-  <input name="email" size="40" value="#{params['email']}"/></p>
-  <p><label for="password">Password:</label><br/>
-  <input type="password" name="password" size="20"/></p>
-  <p><input type="submit" value="Authenticate to FogBugz"/></p>
-</form>
-EOHTML
-}
+puts "Writing configuration file to #{config_path}/config.yml"
+FileUtils.mkpath(config_path)
+FileUtils.cp(File.dirname(__FILE__) + "/../config/config.yml.example", config_path + "/config.yml")
 
-get "/login" do
-  config = YAML.load_file("config.yml")
-  AUTH_FORM.call(config, Hash.new)
-end
-
-post "/authenticate" do
-  tokens = File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
-  config = YAML.load_file("config.yml")
-
-  begin
-    service = FogbugzService.new(config["fb_main_url"], config["curl"])
-    service.connect do
-      token = service.logon(params["email"], params["password"])
-      tokens[params["email"]] = token
-    end
-
-    File.open("tokens.yml", "wb") do |io|
-      io.write tokens.to_yaml
-      File.chmod(0600, "tokens.yml") # Ensure the tokens file is readable only by ourselves
-    end
-
-    redirect "/authenticated"
-  rescue FogbugzService::BadCredentials
-    "<p>Failed authentication: <strong>#{$!.message}</strong></p>" + AUTH_FORM.call(config, params)
-  end
-end
-
-get "/authenticated" do
-  <<-HTML
-    <h1>Authenticated</h1>
-    <p>You are now authenticated to FogBugz.  Go forth and commit!</p>
-    
-    <h2>Writing commit messages</h2>
-    <p>Your commit messages can now contain text like the following to automatically manage your cases:</p>
-    <blockquote>
-      <p>Implemented foo, corrected baz.</p>
-      <p>Implements #1234, references #2345.  Closes #1234.</p>
-    </blockquote>
-    <p>This would automatically add the commit message to cases #1234 <em>and</em> #2345.  The commit message will be appended as an event to the case.  In addition, case #1234 will be closed.</p>
-    <p>GithubFogbugz recognizes the following keywords:  closes, implements, references and fixes.  NOTE:  FogBugz does not allow closing a case that isn't resolved, so you really must use "Implements X, closes X", or else it won't work.</p>
-  HTML
-end
-
-## 
-# Set the log and diff urls (in fogbugz's site settings) to point here.
-# Log url:  http://localhost:4567/repo_url?type=log&repo=^REPO&file=^FILE&r1=^R1&r2=^R2
-# Diff url: http://localhost:4567/repo_url?type=diff&repo=^REPO&file=^FILE&r1=^R1&r2=^R2
-get '/repo_url' do
-  config = YAML.load_file('config.yml')
-
-  #pull out the repo's scm viewer url from the config file
-  if params[:type] == 'log'
-    url = config['repos'][params[:repo]]['log_url']
-  elsif params[:type] == 'diff'
-    url = config['repos'][params[:repo]]['diff_url']
-  else
-    "Unknown repo viewer type."
-  end
-  
-  if url
-    url.gsub!(/\^REPO/, params[:repo])
-    url.gsub!(/\^FILE/, params[:file])
-    url.gsub!(/\^R1/, params[:r1])
-    url.gsub!(/\^R2/, params[:r2])
-    redirect url
-  end
-    
-end
-
-error do
-  err = request.env['sinatra.error']
-  puts "Error handling request: #{err.name}"
-  puts err.backtrace.join("\n")
-end
-
-
-##
-# This class does all of the json parsing and submits a push's commits to fogbugz
-class GithubFogbugz
-  
-  def initialize(payload)
-    config = YAML.load_file('config.yml')
-    
-    payload = JSON.parse(payload)
-    return unless payload.keys.include?("repository")
-    
-    repo = payload["repository"]["name"]
-    branch = payload["ref"].split('/').last
-    
-    payload["commits"].each do |c|
-      process_commit(c.first, c.last, repo, branch, payload['before'], config['fb_submit_url'], config['curl'])
-    end
-    
-    rescue
-      puts "Oh noez, something went wrong: #{$!.message}"
-      puts $!.backtrace.join("\n")
-      raise
-  end
-
-  def tokens
-    @tokens ||= File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
-  end
-
-  def config
-    @config ||= if File.file?("config.yml") then
-      YAML.load_file("config.yml")
-    else
-      raise "#{Dir.pwd}/config.yml does not exist!  Aborting..."
-    end
-  end
-
-  def submit_to_fogbugz(sha1, commit, token, curl_path)
-    listener = FogbugzListener.new(:commit_url => commit["url"], :message => commit["message"], :sha1 => sha1)
-    MessageParser.parse(commit["message"], listener)
-    service = FogbugzService.new(config["fb_main_url"], curl_path, token)
-    service.connect do
-      listener.update_fogbugz(service)
-    end
-  end
-
-  def process_commit(sha1, commit, repo, branch, before, fb_submit_url, curl_path)
-    
-    # from each commit in the payload, we need to extract:
-    # - name of repo, renamed as "github-<repo>"
-    # - name of file, including branch. e.g.: "4.7/Builds/Cablecast.fbp4"
-    # - sha1 of commit (R2)
-    # - sha1 of before (R1)
-    # - bugzid (found inside the commit message)
-    
-    message = commit["message"]
-    author = commit["author"]["email"]
-
-    token = tokens[author]
-    submit_to_fogbugz(sha1, commit, token, curl_path) if token
-
-    files = commit["removed"] | commit["added"] | commit["modified"]
-    
-    # look for a bug id in each line of the commit message
-    bug_list = []
-    message.split("\n").each do |line|
-      if (line =~ /\s*Bug[zs]*\s*IDs*\s*[#:; ]+((\d+[ ,:;#]*)+)/i)
-        bug_list << $1.to_i
-      end
-    end
-    
-    # for each found bugzid, submit the files to fogbugz.
-    # this will set the sRepo to "github-<repo>", which will be used above
-    # when fogbugz asks for the scm viewer url.
-    bug_list.each do |fb_bugzid|
-      files.each do |f|
-        fb_repo = CGI.escape("github-#{repo}")
-        fb_r1 = CGI.escape("#{before}")
-        fb_r2 = CGI.escape("#{sha1}")
-        fb_file = CGI.escape("#{branch}/#{f}")
-        
-        #build the GET request, and send it to fogbugz
-        fb_url = "#{fb_submit_url}?ixBug=#{fb_bugzid}&sRepo=#{fb_repo}&sFile=#{fb_file}&sPrev=#{fb_r1}&sNew=#{fb_r2}"
-        puts `#{curl_path} --insecure --silent --output /dev/null '#{fb_url}'`
-
-      end
-    end
-  end
-end
+puts "You now have to edit the configuration file and set the right values."
+puts "Documentation is available in the config file itself, and on the web at:"
+puts "\thttp://github.com/johnreilly/github-fogbugz/wikis"

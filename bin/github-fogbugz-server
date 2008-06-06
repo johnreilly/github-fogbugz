@@ -10,6 +10,39 @@ require 'fogbugz_service'
 require 'fogbugz_listener'
 require 'message_parser'
 
+# Returns the path to the configuration file.  It defaults to ~/.github-fogbugz/config.yml
+def config_path
+  @config_path ||= File.expand_path(ENV["CONFIG_PATH"] || "~/.github-fogbugz/config.yml")
+end
+
+# Returns a Hash of configuration options read from +config_path+.
+def config
+  return @config if @config
+  @config = File.file?(config_path) ? YAML.load_file(config_path) : Hash.new
+end
+
+def write_config
+  FileUtils.mkpath(File.dirname(config_path)) if File.directory?(File.dirname(config_path))
+  File.open(config_path, "w") {|io| io.write config.to_yaml}
+end
+
+# Returns the path to the tokens file.  It defaults to ~/.github-fogbugz/tokens.yml
+def tokens_path
+  @tokens_path ||= File.expand_path(ENV["TOKENS_PATH"] || "~/.github-fogbugz/tokens.yml")
+end
+
+# Returns a Hash of tokens read from +tokens_path+.
+def tokens
+  return @tokens if @tokens
+  FileUtils.mkpath(File.dirname(tokens_path)) if File.directory?(File.dirname(tokens_path))
+  @tokens = File.file?(tokens_path) ? YAML.load_file(tokens_path) : Hash.new
+end
+
+def write_tokens
+  FileUtils.mkpath(File.dirname(tokens_path)) if File.directory?(File.dirname(tokens_path))
+  File.open(tokens_path, "w") {|io| io.write tokens.to_yaml}
+end
+
 # This sinatra app has a couple of endpoints:
 #  /              This is where GitHub will send 
 #                 its post-receive hooks

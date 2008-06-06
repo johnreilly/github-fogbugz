@@ -5,7 +5,7 @@ require "rake/gempackagetask"
 GEM = "github-fogbugz"
 VERSION = "0.0.2"
 AUTHOR = ["John Reilly", "François Beausoleil"]
-EMAIL = ["francois@teksol.info"]
+EMAIL = ["jr@trms.com", "francois@teksol.info"]
 HOMEPAGE = "http://github.com/johnreilly/github-fogbugz"
 SUMMARY = "A gem that acts as the gateway between GitHub and Fogbugz."
 

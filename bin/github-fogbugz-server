@@ -4,6 +4,7 @@ require 'json'
 require 'sinatra'
 require 'yaml'
 require 'cgi'
+require 'fileutils'
 
 $: << File.dirname(__FILE__) + "/../lib"
 require 'fogbugz_service'

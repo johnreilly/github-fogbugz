@@ -5,7 +5,7 @@ require "rake/gempackagetask"
 GEM = "github-fogbugz"
 VERSION = "0.0.2"
 AUTHOR = ["John Reilly", "François Beausoleil"]
-EMAIL = ""
+EMAIL = ["francois@teksol.info"]
 HOMEPAGE = "http://github.com/johnreilly/github-fogbugz"
 SUMMARY = "A gem that acts as the gateway between GitHub and Fogbugz."
 
@@ -26,7 +26,6 @@ spec = Gem::Specification.new do |s|
   s.add_dependency "json", "~> 1.1.2"
   
   s.require_path = "lib"
-  s.autorequire = GEM
 
   # Must reference lib/message_parser.rb explicitely, or it won't be automatically generated
   s.files = %w(LICENSE README.markdown Rakefile TODO lib/message_parser.rb) + Dir.glob("{lib,test,config,samples,bin}/**/*")

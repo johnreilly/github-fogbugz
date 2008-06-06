@@ -13,6 +13,7 @@ Gems:
 
 * sinatra
 * json
+* mocha (for running tests)
 
 Optional:
 

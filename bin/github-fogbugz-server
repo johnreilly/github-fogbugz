@@ -66,10 +66,10 @@ post '/' do
   GithubFogbugz.new(params[:payload])
 end
 
-AUTH_FORM = lambda {|config, params|
+AUTH_FORM = lambda {|fb_url, params|
   <<-EOHTML
 <h1>FogBugz Authentication</h1>
-<p>This form will authenticate you to <strong>#{config['fb_main_url']}</strong></p>
+<p>This form will authenticate you to <strong>#{fb_url}</strong></p>
 <form method="post" action="/authenticate">
   <p><label for="email">Email:</label><br/>
   <input name="email" size="40" value="#{params['email']}"/></p>
@@ -81,14 +81,14 @@ EOHTML
 }
 
 get "/login" do
-  config = YAML.load_file("config.yml")
-  AUTH_FORM.call(config, Hash.new)
+  if fb_main_url = config['fb_main_url'] then
+    AUTH_FORM.call(fb_main_url, Hash.new)
+  else
+    "<h1>A configuration error exists</h1><p>Ooops, the configuration file does not exist at path: <strong><tt>#{config_path}</tt></strong>.</p>"
+  end
 end
 
 post "/authenticate" do
-  tokens = File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
-  config = YAML.load_file("config.yml")
-
   begin
     service = FogbugzService.new(config["fb_main_url"], config["curl"])
     service.connect do
@@ -96,14 +96,10 @@ post "/authenticate" do
       tokens[params["email"]] = token
     end
 
-    File.open("tokens.yml", "wb") do |io|
-      io.write tokens.to_yaml
-      File.chmod(0600, "tokens.yml") # Ensure the tokens file is readable only by ourselves
-    end
-
+    write_tokens
     redirect "/authenticated"
   rescue FogbugzService::BadCredentials
-    "<p>Failed authentication: <strong>#{$!.message}</strong></p>" + AUTH_FORM.call(config, params)
+    "<p>Failed authentication: <strong>#{$!.message}</strong></p>" + AUTH_FORM.call(config['fb_main_url'], params)
   end
 end
 
@@ -119,7 +115,7 @@ get "/authenticated" do
       <p>Implements #1234, references #2345.  Closes #1234.</p>
     </blockquote>
     <p>This would automatically add the commit message to cases #1234 <em>and</em> #2345.  The commit message will be appended as an event to the case.  In addition, case #1234 will be closed.</p>
-    <p>GithubFogbugz recognizes the following keywords:  closes, implements, references and fixes.  NOTE:  FogBugz does not allow closing a case that isn't resolved, so you really must use "Implements X, closes X", or else it won't work.</p>
+    <p>GithubFogbugz recognizes the following keywords:  closes, implements, references and fixes (and singular versions of the same keywords).  NOTE:  FogBugz does not allow closing a case that isn't resolved, so you really must use "Implements X, closes X", or else it won't work.</p>
   HTML
 end
 
@@ -128,8 +124,6 @@ end
 # Log url:  http://localhost:4567/repo_url?type=log&repo=^REPO&file=^FILE&r1=^R1&r2=^R2
 # Diff url: http://localhost:4567/repo_url?type=diff&repo=^REPO&file=^FILE&r1=^R1&r2=^R2
 get '/repo_url' do
-  config = YAML.load_file('config.yml')
-
   #pull out the repo's scm viewer url from the config file
   if params[:type] == 'log'
     url = config['repos'][params[:repo]]['log_url']
@@ -161,8 +155,6 @@ end
 class GithubFogbugz
   
   def initialize(payload)
-    config = YAML.load_file('config.yml')
-    
     payload = JSON.parse(payload)
     return unless payload.keys.include?("repository")
     
@@ -177,18 +169,6 @@ class GithubFogbugz
       puts "Oh noez, something went wrong: #{$!.message}"
       puts $!.backtrace.join("\n")
       raise
-  end
-
-  def tokens
-    @tokens ||= File.file?("tokens.yml") ? YAML.load_file("tokens.yml") : Hash.new
-  end
-
-  def config
-    @config ||= if File.file?("config.yml") then
-      YAML.load_file("config.yml")
-    else
-      raise "#{Dir.pwd}/config.yml does not exist!  Aborting..."
-    end
   end
 
   def submit_to_fogbugz(sha1, commit, token, curl_path)
